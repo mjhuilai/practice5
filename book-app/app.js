@@ -8,7 +8,8 @@ const tip = document.querySelector('#tip');
 const list = document.querySelector('#book-list');
 const submitBtn = document.querySelector('#submit-btn');
 
-let books = [];
+let books = JSON.parse(localStorage.getItem('books') || '[]');   // 首次访问无存档时得到空数组而不是null
+const save = () => localStorage.setItem('books', JSON.stringify(books));
 let editingId = null; // 当前正在编辑的图书id
 
 const render = () => {
@@ -49,6 +50,7 @@ const cancelEdit = () => {
 const removeBook = (id) => {
   books = books.filter(b => b.id !== id);
   if (editingId === id) cancelEdit();
+  save();
   render();
 };
 
@@ -68,20 +70,26 @@ form.addEventListener('submit', (e) => {
     tip.textContent = '书名不能为空';
     return;
   }
+  const score = Number(scoreInput.value);
+  if (scoreInput.value === '' || Number.isNaN(score) || score < 0 || score > 10) {
+    tip.textContent = '评分必须是0～10之间的数字';
+    return;
+  }
   if (editingId !== null) {
     const book = books.find(b => b.id === editingId);
     book.title = title;
     book.author = authorInput.value.trim();
-    book.score = scoreInput.value;
+    book.score = score;
     cancelEdit();
   } else {
     books.push({
       id: Date.now(),
       title: title,
       author: authorInput.value.trim(),
-      score: scoreInput.value
+      score: score
     });
   }
+  save();
   tip.textContent = '';
   form.reset();
   render();
